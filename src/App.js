@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import InfinitScroll from 'react-infinite-scroll-component'
 import { makeStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
@@ -13,7 +13,6 @@ import './App.css';
 
 const useStyles = makeStyles({
   root: {
-    // flexGrow: 1,
     padding: 20
   },
   cardRoot: {
@@ -26,29 +25,30 @@ const useStyles = makeStyles({
 
 function App() {
   const classes = useStyles();
-  const [article, setArticles] = useState(() => {
-    return Array(10).fill().map(() => ({
-      title: "Product Management",
-      date: 'September -11',
-      time: '9:30AM',
-      price: 'free'
-    }));
-  });
+  const [article, setArticles] = useState([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPassenger, setTotalPassenger] = useState();
+
+  useEffect(() => {
+    fetchNextUsers()
+  }, [])
 
   const fetchNextUsers = () => {
-    setArticles(articles => [...articles, ...article.concat(Array(10).fill().map(() => ({
-      title: "Product Management",
-      date: 'September -11',
-      time: '9:30AM',
-      price: 'free'
-    })))])
+    fetch(`https://api.instantwebtools.net/v1/passenger?page=${page}&size=${size}`)
+      .then(response => response.json())
+      .then(json => {
+        setArticles(articles => [...articles, ...json.data])
+        setPage(page => page + 1)
+        setTotalPassenger(json.totalPassengers)
+      })
   }
 
   return (
     <InfinitScroll
       dataLength={article.length}
       next={fetchNextUsers}
-      hasMore={true}
+      hasMore={article.length < totalPassenger}
       loader={<h4>Loading ... </h4>}
       style={{ display: 'flex', flexWrap: 'wrap' }}
     >
@@ -58,21 +58,21 @@ function App() {
             <CardActionArea>
               <CardMedia
                 className={classes.media}
-                image={"party-img.jpg"}
-                title="Contemplative Reptile"
+                image={art.airline.logo || ''}
+                title={art.name}
               />
               <CardContent>
                 <Typography gutterBottom variant="h5" component="h2">
-                  {art.title}
+                  {art.name}
                 </Typography>
                 <Typography variant="body2" color="textSecondary" component="p">
-                  {art.date}-{art.time}
+                  {art.head_quaters}
                 </Typography>
               </CardContent>
             </CardActionArea>
             <CardActions>
               <Button size="small" color="primary">
-                {art.price}
+                {art.established}
               </Button>
             </CardActions>
           </Card>
